@@ -1,0 +1,65 @@
+# Harnais de vérification de l'Académie IA (ADR-0014).
+#
+# Ce workflow tourne dans VOTRE dépôt, sur VOTRE runner GitHub. La plateforme
+# n'exécute rien : elle lit le résultat publié ici, lié au commit.
+#
+# Chaque module produit une vérification nommée « academie/module-N ». Elles
+# sont cumulatives : au module 3, les suites des modules 1 et 2 tournent encore,
+# donc une régression bloque la progression.
+#
+# Ce fichier fait partie du harnais : son empreinte est vérifiée. Le modifier
+# n'entraîne pas un échec, mais confie votre remise à un mentor.
+
+name: academie
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  module:
+    name: academie/module-${{ matrix.module }}
+    runs-on: ubuntu-latest
+    strategy:
+      # Chaque module est une vérification distincte : un échec au module 3
+      # n'empêche pas de voir le résultat des modules 1 et 2.
+      fail-fast: false
+      matrix:
+        module: [1, 2, 3, 4, 5, 6, 7, 8]
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: rides_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Vérifications du module ${{ matrix.module }}
+        run: node academie/run.mjs ${{ matrix.module }}
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/rides_test
+          # Renseignez ce secret au dernier module, quand votre application est
+          # déployée : la suite finale interroge son URL publique.
+          DEPLOYMENT_URL: ${{ secrets.DEPLOYMENT_URL }}

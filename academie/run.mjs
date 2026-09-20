@@ -38,7 +38,7 @@ let failed = 0
 for (const suite of suites) {
   console.log(`\n── ${suite.name} ${'─'.repeat(Math.max(0, 40 - suite.name.length))}`)
   // Le lanceur de tests vient de votre dépôt, pas du harnais.
-  const result = spawnSync('npx', ['vitest', 'run', suite.path, '--reporter=basic'], {
+  const result = spawnSync('npx', ['vitest', 'run', suite.path], {
     stdio: 'inherit',
     shell: process.platform === 'win32',
   })

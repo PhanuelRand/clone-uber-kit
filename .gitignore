@@ -5,3 +5,11 @@ coverage/
 .env.local
 *.log
 .DS_Store
+# Les photos du stockage simulé (module 6) restent sur votre machine.
+stockage-local/
+.data/
+
+# Données PostgreSQL locales, même avec DATA_DIR personnalisé.
+**/connexion.json
+**/init-password
+**/postgres/
